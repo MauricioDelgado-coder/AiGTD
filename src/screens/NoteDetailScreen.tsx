@@ -135,7 +135,6 @@ export const NoteDetailScreen: React.FC = () => {
             onChangeText={setTitle}
             placeholder="Note title…"
             placeholderTextColor={Colors.textMuted}
-            fontSize={22}
             multiline={false}
             autoFocus={isNew}
           />

@@ -25,9 +25,9 @@ export const Colors = {
 };
 
 export const Typography = {
-  displayFont: Platform.select({ ios: 'Georgia', android: 'serif' }),
-  bodyFont: Platform.select({ ios: 'System', android: 'sans-serif' }),
-  monoFont: Platform.select({ ios: 'Courier New', android: 'monospace' }),
+  displayFont: Platform.select({ ios: 'Georgia', android: 'serif', default: 'Georgia, serif' }),
+  bodyFont: Platform.select({ ios: 'System', android: 'sans-serif', default: 'system-ui, sans-serif' }),
+  monoFont: Platform.select({ ios: 'Courier New', android: 'monospace', default: '"Courier New", monospace' }),
 };
 
 export const Radius = { sm: 8, md: 12, lg: 16, xl: 24, pill: 999 };
