@@ -3,7 +3,7 @@ import { View, Text, FlatList, TouchableOpacity, TextInput, ActivityIndicator } 
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { T, FontFamily } from '../theme';
-import { Mono, Serif, Checkbox, Chip } from '../components/primitives';
+import { Mono, Serif, Checkbox, Chip, Card } from '../components/primitives';
 import { useGTDStore } from '../store/gtdStore';
 
 export const InboxScreen: React.FC = () => {
@@ -25,39 +25,108 @@ export const InboxScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: T.bg }} edges={['top']}>
+      {/* Header */}
       <View style={{ flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', paddingHorizontal: 20, paddingTop: 14, paddingBottom: 6 }}>
         <Serif size={30}>Inbox</Serif>
         <Mono>{inboxTasks.length} items</Mono>
       </View>
-      <View style={{ paddingHorizontal: 20, marginBottom: 12 }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, padding: 6, paddingLeft: 16, borderRadius: 16, backgroundColor: T.card, borderWidth: 1, borderColor: T.line }}>
-          <Text style={{ fontSize: 18, color: T.indigoLt }}>+</Text>
-          <TextInput style={{ flex: 1, fontSize: 15, color: T.text, fontFamily: FontFamily.sans, paddingVertical: 8 }} value={captureText} onChangeText={setCaptureText} placeholder="Capture anything…" placeholderTextColor={T.faint} returnKeyType="done" onSubmitEditing={handleCapture} />
-          <TouchableOpacity style={{ width: 40, height: 40, borderRadius: 12, backgroundColor: T.indigo, alignItems: 'center', justifyContent: 'center' }} onPress={handleCapture} disabled={processing}>
-            {processing ? <ActivityIndicator color="#fff" size="small" /> : <Text style={{ color: '#fff', fontSize: 18 }}>+</Text>}
+
+      {/* Capture bar — focused indigo glow */}
+      <View style={{ paddingHorizontal: 20, marginBottom: 14 }}>
+        <View style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: 10,
+          padding: 6,
+          paddingLeft: 16,
+          borderRadius: 16,
+          backgroundColor: T.card,
+          borderWidth: 1,
+          borderColor: T.indigoBd,
+          // @ts-ignore web shadow
+          boxShadow: '0 0 0 4px rgba(123,110,246,0.07)',
+        }}>
+          <Text style={{ fontSize: 16, color: T.indigoLt, fontWeight: '600' }}>+</Text>
+          <TextInput
+            style={{ flex: 1, fontSize: 15, color: T.text, fontFamily: FontFamily.sans, paddingVertical: 8 }}
+            value={captureText}
+            onChangeText={setCaptureText}
+            placeholder="Capture anything…"
+            placeholderTextColor={T.faint}
+            returnKeyType="done"
+            onSubmitEditing={handleCapture}
+          />
+          <TouchableOpacity
+            style={{ width: 40, height: 40, borderRadius: 12, backgroundColor: T.indigo, alignItems: 'center', justifyContent: 'center' }}
+            onPress={handleCapture}
+            disabled={processing}
+          >
+            {processing
+              ? <ActivityIndicator color="#fff" size="small" />
+              : <Text style={{ color: '#fff', fontSize: 20, fontWeight: '300' }}>♪</Text>
+            }
           </TouchableOpacity>
         </View>
       </View>
+
+      {/* Filter chips */}
       <View style={{ flexDirection: 'row', gap: 8, paddingHorizontal: 20, marginBottom: 14 }}>
-        {['All', 'Today', 'Flagged', 'Unsorted'].map(f => <Chip key={f} active={filter === f} onPress={() => setFilter(f)}>{f}</Chip>)}
+        {['All', 'Today', 'Flagged', 'Unsorted'].map(f => (
+          <Chip key={f} active={filter === f} onPress={() => setFilter(f)}>{f}</Chip>
+        ))}
       </View>
+
       <FlatList
         data={inboxTasks}
         keyExtractor={t => t.id}
-        contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 40 }}
-        ListEmptyComponent={<View style={{ padding: 40, alignItems: 'center' }}><Mono color={T.faint}>Inbox zero — well done</Mono></View>}
+        contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 120 }}
+        ListEmptyComponent={
+          <View style={{ padding: 40, alignItems: 'center' }}>
+            <Text style={{ fontSize: 28, marginBottom: 12 }}>📭</Text>
+            <Serif size={18} color={T.sub}>Inbox zero</Serif>
+            <Mono color={T.faint} style={{ marginTop: 8, textAlign: 'center' }}>Well done — nothing left to capture</Mono>
+          </View>
+        }
         renderItem={({ item, index }) => (
-          <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', gap: 13, padding: 14, backgroundColor: T.card, borderRadius: 18, borderWidth: 1, borderColor: T.line, marginBottom: 8 }} onPress={() => router.push(`/task/${item.id}`)}>
+          <TouchableOpacity
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 13,
+              padding: 14,
+              backgroundColor: T.card,
+              borderRadius: 18,
+              borderWidth: 1,
+              borderColor: T.line,
+              marginBottom: 8,
+            }}
+            onPress={() => router.push(`/task/${item.id}`)}
+          >
             <Checkbox done={item.done} color={item.done ? T.faint : T.indigo} onPress={() => toggleDone(item.id)} />
             <View style={{ flex: 1 }}>
-              <Text style={{ fontSize: 14.5, fontWeight: '500', color: item.done ? T.faint : T.text, fontFamily: FontFamily.sans, textDecorationLine: item.done ? 'line-through' : 'none' }} numberOfLines={2}>{item.title}</Text>
+              <Text style={{
+                fontSize: 14.5,
+                fontWeight: '500',
+                color: item.done ? T.faint : T.text,
+                fontFamily: FontFamily.sans,
+                textDecorationLine: item.done ? 'line-through' : 'none',
+              }} numberOfLines={2}>
+                {item.title}
+              </Text>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 5 }}>
                 <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: item.priority === 'urgent' ? T.rose : T.indigo }} />
                 <Mono size={9.5} spacing={1}>{item.tags[0] || 'Inbox'}</Mono>
-                {item.nextAction ? <><Text style={{ color: T.dim }}>·</Text><Mono size={9.5} spacing={1} color={T.faint}>{item.nextAction.slice(0, 24)}</Mono></> : null}
+                {item.nextAction ? (
+                  <>
+                    <Text style={{ color: T.dim }}>·</Text>
+                    <Mono size={9.5} spacing={1} color={T.faint}>{item.nextAction.slice(0, 24)}</Mono>
+                  </>
+                ) : null}
               </View>
             </View>
-            {item.priority === 'urgent' && <Text style={{ color: T.rose }}>⚑</Text>}
+            {item.priority === 'urgent' && (
+              <Text style={{ color: T.rose, fontSize: 14 }}>⚑</Text>
+            )}
           </TouchableOpacity>
         )}
       />

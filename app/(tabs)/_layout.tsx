@@ -1,56 +1,96 @@
+import React from 'react';
 import { Tabs } from 'expo-router';
-import { Text } from 'react-native';
-import { T } from '../../src/theme';
+import { View, Text, TouchableOpacity, Platform } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { T, FontFamily } from '../../src/theme';
+
+const TAB_ICONS: Record<string, string> = {
+  home:     '⌂',
+  inbox:    '⊡',
+  index:    '✎',
+  review:   '↻',
+  settings: '⚙',
+};
+
+function CustomTabBar({ state, descriptors, navigation }: any) {
+  const insets = useSafeAreaInsets();
+  const tabMap: Record<string, string> = {
+    home: 'home', inbox: 'inbox', index: 'note', review: 'review', settings: 'settings',
+  };
+
+  return (
+    <View
+      pointerEvents="box-none"
+      style={{
+        position: 'absolute',
+        left: 16,
+        right: 16,
+        bottom: Math.max(insets.bottom, 10) + 16,
+        height: 62,
+        borderRadius: 22,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-around',
+        paddingHorizontal: 8,
+        backgroundColor: T.glass,
+        borderWidth: 1,
+        borderColor: T.glassBd,
+        // @ts-ignore web shadow
+        boxShadow: '0 10px 30px rgba(0,0,0,0.5)',
+        backdropFilter: 'blur(20px) saturate(160%)',
+        WebkitBackdropFilter: 'blur(20px) saturate(160%)',
+      }}
+    >
+      {state.routes.map((route: any, idx: number) => {
+        const { options } = descriptors[route.key];
+        const isFocused = state.index === idx;
+        const icon = TAB_ICONS[route.name] || '•';
+
+        const onPress = () => {
+          const event = navigation.emit({ type: 'tabPress', target: route.key, canPreventDefault: true });
+          if (!isFocused && !event.defaultPrevented) {
+            navigation.navigate(route.name);
+          }
+        };
+
+        return (
+          <TouchableOpacity
+            key={route.key}
+            onPress={onPress}
+            accessibilityRole="button"
+            accessibilityState={isFocused ? { selected: true } : {}}
+            style={{
+              width: 46,
+              height: 42,
+              borderRadius: 14,
+              alignItems: 'center',
+              justifyContent: 'center',
+              backgroundColor: isFocused ? T.indigoBg : 'transparent',
+            }}
+          >
+            <Text style={{ color: isFocused ? T.indigoLt : T.faint, fontSize: 20, lineHeight: 26 }}>
+              {icon}
+            </Text>
+          </TouchableOpacity>
+        );
+      })}
+    </View>
+  );
+}
 
 export default function TabsLayout() {
   return (
     <Tabs
+      tabBar={(props) => <CustomTabBar {...props} />}
       screenOptions={{
         headerShown: false,
-        tabBarStyle: {
-          backgroundColor: T.card,
-          borderTopColor: T.line,
-          borderTopWidth: 1,
-        },
-        tabBarActiveTintColor: T.indigo,
-        tabBarInactiveTintColor: T.faint,
       }}
     >
-      <Tabs.Screen
-        name="home"
-        options={{
-          title: 'Home',
-          tabBarIcon: ({ color }) => <Text style={{ color, fontSize: 18 }}>⌂</Text>,
-        }}
-      />
-      <Tabs.Screen
-        name="inbox"
-        options={{
-          title: 'Inbox',
-          tabBarIcon: ({ color }) => <Text style={{ color, fontSize: 18 }}>⊡</Text>,
-        }}
-      />
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: 'Notes',
-          tabBarIcon: ({ color }) => <Text style={{ color, fontSize: 18 }}>✎</Text>,
-        }}
-      />
-      <Tabs.Screen
-        name="review"
-        options={{
-          title: 'Review',
-          tabBarIcon: ({ color }) => <Text style={{ color, fontSize: 18 }}>↻</Text>,
-        }}
-      />
-      <Tabs.Screen
-        name="settings"
-        options={{
-          title: 'Settings',
-          tabBarIcon: ({ color }) => <Text style={{ color, fontSize: 18 }}>⚙️</Text>,
-        }}
-      />
+      <Tabs.Screen name="home" options={{ title: 'Home' }} />
+      <Tabs.Screen name="inbox" options={{ title: 'Inbox' }} />
+      <Tabs.Screen name="index" options={{ title: 'Notes' }} />
+      <Tabs.Screen name="review" options={{ title: 'Review' }} />
+      <Tabs.Screen name="settings" options={{ title: 'Settings' }} />
     </Tabs>
   );
 }
