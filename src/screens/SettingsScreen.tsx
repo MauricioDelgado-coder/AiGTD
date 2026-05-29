@@ -6,8 +6,8 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import * as SecureStore from 'expo-secure-store';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getSecureItem, setSecureItem } from '../lib/secureStorage';
 import { Colors, Radius, Spacing, Typography } from '../theme';
 import { iCloudService } from '../services/iCloudService';
 import { useGTDStore } from '../store/gtdStore';
@@ -27,7 +27,7 @@ export const SettingsScreen: React.FC = () => {
 
   useEffect(() => {
     (async () => {
-      setAnthropicKey((await SecureStore.getItemAsync(ANTHROPIC_KEY)) ?? '');
+      setAnthropicKey((await getSecureItem(ANTHROPIC_KEY)) ?? '');
       setVoyageKey((await AsyncStorage.getItem('aigtd.voyageKey')) ?? '');
       setSupabaseUrl((await AsyncStorage.getItem('aigtd.supabaseUrl')) ?? '');
       setSupabaseKey((await AsyncStorage.getItem('aigtd.supabaseKey')) ?? '');
@@ -35,7 +35,7 @@ export const SettingsScreen: React.FC = () => {
   }, []);
 
   const saveAll = async () => {
-    await SecureStore.setItemAsync(ANTHROPIC_KEY, anthropicKey.trim());
+    await setSecureItem(ANTHROPIC_KEY, anthropicKey.trim());
     await AsyncStorage.multiSet([
       ['aigtd.voyageKey', voyageKey.trim()],
       ['aigtd.supabaseUrl', supabaseUrl.trim()],

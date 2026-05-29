@@ -1,23 +1,23 @@
 // src/services/aiService.ts
 import Anthropic from '@anthropic-ai/sdk';
-import * as SecureStore from 'expo-secure-store';
+import { getSecureItem, setSecureItem } from '../lib/secureStorage';
 import { Task, TaskBucket } from '../types';
 import { notesService } from './notesService';
 
 const API_KEY_STORE = 'aigtd.anthropicKey';
 
 async function getClient(): Promise<Anthropic> {
-  const key = await SecureStore.getItemAsync(API_KEY_STORE);
+  const key = await getSecureItem(API_KEY_STORE);
   if (!key) throw new Error('NO_API_KEY');
   return new Anthropic({ apiKey: key });
 }
 
 export async function saveApiKey(key: string): Promise<void> {
-  await SecureStore.setItemAsync(API_KEY_STORE, key);
+  await setSecureItem(API_KEY_STORE, key);
 }
 
 export async function getApiKey(): Promise<string | null> {
-  return SecureStore.getItemAsync(API_KEY_STORE);
+  return getSecureItem(API_KEY_STORE);
 }
 
 // ============================================================
