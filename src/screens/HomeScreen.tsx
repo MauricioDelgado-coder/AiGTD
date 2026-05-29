@@ -1,15 +1,14 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, RefreshControl } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, ScrollView, TouchableOpacity, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
-import { T, FontFamily, Radius, Spacing } from '../theme';
-import { Mono, Serif, Card, Checkbox, Icon, GlassTabBar } from '../components/primitives';
+import { useRouter } from 'expo-router';
+import { T, FontFamily } from '../theme';
+import { Mono, Serif, Card, Checkbox, Icon } from '../components/primitives';
 import { useGTDStore } from '../store/gtdStore';
 
 export const HomeScreen: React.FC = () => {
-  const navigation = useNavigation<any>();
+  const router = useRouter();
   const { tasks, toggleDone } = useGTDStore();
-  const [digest, setDigest] = useState('Loading your daily digest...');
   const [refreshing, setRefreshing] = useState(false);
   const inboxCount = tasks.filter(t => t.bucket === 'inbox').length;
   const upNext = tasks.filter(t => t.bucket === 'current' && !t.done).slice(0, 3);
@@ -21,7 +20,7 @@ export const HomeScreen: React.FC = () => {
   const today = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: T.bg }} edges={['top']}>
-      <ScrollView contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 14, paddingBottom: 120 }} showsVerticalScrollIndicator={false} refreshControl={<RefreshControl refreshing={refreshing} tintColor={T.indigoLt} onRefresh={() => {}} />}>
+      <ScrollView contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 14, paddingBottom: 40 }} showsVerticalScrollIndicator={false} refreshControl={<RefreshControl refreshing={refreshing} tintColor={T.indigoLt} onRefresh={() => {}} />}>
         <Mono>{today}</Mono>
         <Serif size={32} style={{ marginTop: 6, marginBottom: 20 }}>Good morning.</Serif>
         <Card style={{ padding: 18, marginBottom: 14 }}>
@@ -29,13 +28,13 @@ export const HomeScreen: React.FC = () => {
             <Icon name="sparkle" size={15} color={T.indigoLt} />
             <Mono color={T.indigoLt} spacing={1.8}>AI Daily Digest</Mono>
           </View>
-          <Text style={{ fontSize: 15, lineHeight: 23, color: T.text, fontFamily: FontFamily.sans }}>{digest}</Text>
+          <Text style={{ fontSize: 15, lineHeight: 23, color: T.text, fontFamily: FontFamily.sans }}>Your AI digest will appear here once you add your Anthropic API key in Settings.</Text>
           <View style={{ flexDirection: 'row', gap: 8, marginTop: 14 }}>
-            <TouchableOpacity style={{ flex: 1, alignItems: 'center', paddingVertical: 9, borderRadius: 11, backgroundColor: T.indigo }} onPress={() => navigation.navigate('AIChat', {})}>
-              <Text style={{ color: '#fff', fontSize: 13, fontWeight: '600', fontFamily: FontFamily.sans }}>Start Focus Block</Text>
+            <TouchableOpacity style={{ flex: 1, alignItems: 'center', paddingVertical: 9, borderRadius: 11, backgroundColor: T.indigo }} onPress={() => router.push('/(tabs)/inbox')}>
+              <Text style={{ color: '#fff', fontSize: 13, fontWeight: '600', fontFamily: FontFamily.sans }}>Go to Inbox</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 14, paddingVertical: 9, borderRadius: 11, borderWidth: 1, borderColor: T.lineHi }} onPress={() => navigation.navigate('AIChat', {})}>
-              <Text style={{ fontSize: 13, color: T.sub, fontFamily: FontFamily.sans }}>Ask</Text>
+            <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 14, paddingVertical: 9, borderRadius: 11, borderWidth: 1, borderColor: T.lineHi }} onPress={() => router.push('/(tabs)/review')}>
+              <Text style={{ fontSize: 13, color: T.sub, fontFamily: FontFamily.sans }}>Review</Text>
             </TouchableOpacity>
           </View>
         </Card>
@@ -54,7 +53,7 @@ export const HomeScreen: React.FC = () => {
         <Card style={{ overflow: 'hidden', marginBottom: 16 }}>
           {upNext.length === 0 ? <View style={{ padding: 20, alignItems: 'center' }}><Mono color={T.faint}>All clear</Mono></View> :
             upNext.map((task, i) => (
-              <TouchableOpacity key={task.id} style={{ flexDirection: 'row', alignItems: 'center', gap: 13, padding: 14, borderTopWidth: i > 0 ? 1 : 0, borderTopColor: T.line }} onPress={() => navigation.navigate('TaskDetail', { taskId: task.id })}>
+              <TouchableOpacity key={task.id} style={{ flexDirection: 'row', alignItems: 'center', gap: 13, padding: 14, borderTopWidth: i > 0 ? 1 : 0, borderTopColor: T.line }} onPress={() => router.push(`/task/${task.id}`)}>
                 <Checkbox done={task.done} color={task.done ? T.faint : T.indigo} onPress={() => toggleDone(task.id)} />
                 <View style={{ flex: 1 }}>
                   <Text style={{ fontSize: 14.5, color: task.done ? T.faint : T.text, fontWeight: '500', fontFamily: FontFamily.sans, textDecorationLine: task.done ? 'line-through' : 'none' }} numberOfLines={1}>{task.title}</Text>
@@ -67,7 +66,7 @@ export const HomeScreen: React.FC = () => {
             ))}
         </Card>
         {inboxCount > 0 && (
-          <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: T.indigoBg, borderRadius: 18, borderWidth: 1, borderColor: T.indigoBd, padding: 16 }} onPress={() => navigation.navigate('Inbox')}>
+          <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: T.indigoBg, borderRadius: 18, borderWidth: 1, borderColor: T.indigoBd, padding: 16 }} onPress={() => router.push('/(tabs)/inbox')}>
             <Text style={{ fontSize: 20 }}>📥</Text>
             <View style={{ flex: 1 }}>
               <Text style={{ fontSize: 14, fontWeight: '600', color: T.text, fontFamily: FontFamily.sans, marginBottom: 2 }}>{inboxCount} items to process</Text>
@@ -76,7 +75,6 @@ export const HomeScreen: React.FC = () => {
           </TouchableOpacity>
         )}
       </ScrollView>
-      <GlassTabBar active="home" onPress={id => { const map: any = { inbox: 'Inbox', note: 'Notes', chat: 'AIChat', review: 'WeeklyReview' }; if (map[id]) navigation.navigate(map[id], {}); }} />
     </SafeAreaView>
   );
 };

@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
-import { View, Text, FlatList, TouchableOpacity, TextInput, StyleSheet, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, TextInput, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
-import { T, FontFamily, Radius } from '../theme';
-import { Mono, Serif, Card, Checkbox, Chip, Icon, GlassTabBar } from '../components/primitives';
+import { useRouter } from 'expo-router';
+import { T, FontFamily } from '../theme';
+import { Mono, Serif, Checkbox, Chip } from '../components/primitives';
 import { useGTDStore } from '../store/gtdStore';
 
 export const InboxScreen: React.FC = () => {
-  const navigation = useNavigation<any>();
-  const { tasks, addTask, updateTask, toggleDone, moveTask } = useGTDStore();
+  const router = useRouter();
+  const { tasks, addTask, toggleDone } = useGTDStore();
   const [captureText, setCaptureText] = useState('');
   const [processing, setProcessing] = useState(false);
   const [filter, setFilter] = useState('All');
@@ -34,7 +34,7 @@ export const InboxScreen: React.FC = () => {
           <Text style={{ fontSize: 18, color: T.indigoLt }}>+</Text>
           <TextInput style={{ flex: 1, fontSize: 15, color: T.text, fontFamily: FontFamily.sans, paddingVertical: 8 }} value={captureText} onChangeText={setCaptureText} placeholder="Capture anything…" placeholderTextColor={T.faint} returnKeyType="done" onSubmitEditing={handleCapture} />
           <TouchableOpacity style={{ width: 40, height: 40, borderRadius: 12, backgroundColor: T.indigo, alignItems: 'center', justifyContent: 'center' }} onPress={handleCapture} disabled={processing}>
-            {processing ? <ActivityIndicator color="#fff" size="small" /> : <Text style={{ color: '#fff', fontSize: 18 }}>♪</Text>}
+            {processing ? <ActivityIndicator color="#fff" size="small" /> : <Text style={{ color: '#fff', fontSize: 18 }}>+</Text>}
           </TouchableOpacity>
         </View>
       </View>
@@ -44,10 +44,10 @@ export const InboxScreen: React.FC = () => {
       <FlatList
         data={inboxTasks}
         keyExtractor={t => t.id}
-        contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 120 }}
+        contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 40 }}
         ListEmptyComponent={<View style={{ padding: 40, alignItems: 'center' }}><Mono color={T.faint}>Inbox zero — well done</Mono></View>}
         renderItem={({ item, index }) => (
-          <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', gap: 13, padding: 14, backgroundColor: T.card, borderRadius: index === 0 ? 18 : 0, borderWidth: 1, borderColor: T.line, marginBottom: 8, borderRadius: 18 }} onPress={() => navigation.navigate('TaskDetail', { taskId: item.id })}>
+          <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', gap: 13, padding: 14, backgroundColor: T.card, borderRadius: 18, borderWidth: 1, borderColor: T.line, marginBottom: 8 }} onPress={() => router.push(`/task/${item.id}`)}>
             <Checkbox done={item.done} color={item.done ? T.faint : T.indigo} onPress={() => toggleDone(item.id)} />
             <View style={{ flex: 1 }}>
               <Text style={{ fontSize: 14.5, fontWeight: '500', color: item.done ? T.faint : T.text, fontFamily: FontFamily.sans, textDecorationLine: item.done ? 'line-through' : 'none' }} numberOfLines={2}>{item.title}</Text>
@@ -61,7 +61,6 @@ export const InboxScreen: React.FC = () => {
           </TouchableOpacity>
         )}
       />
-      <GlassTabBar active="inbox" onPress={id => { const map: any = { home: 'Main', note: 'Notes', chat: 'AIChat', review: 'WeeklyReview' }; if (map[id]) navigation.navigate(map[id], {}); }} />
     </SafeAreaView>
   );
 };

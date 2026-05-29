@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, ScrollView, TouchableOpacity, KeyboardAvoidingView, Platform, Alert } from 'react-native';
+import { View, Text, TextInput, ScrollView, TouchableOpacity, KeyboardAvoidingView, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation, useRoute } from '@react-navigation/native';
-import { T, FontFamily, Radius } from '../theme';
-import { Mono, Serif, Card, Icon } from '../components/primitives';
+import { useRouter } from 'expo-router';
+import { T, FontFamily } from '../theme';
+import { Mono, Serif } from '../components/primitives';
 
 export const NoteDetailScreen: React.FC = () => {
-  const navigation = useNavigation<any>();
+  const router = useRouter();
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
   const tools = ['H', 'B', 'i', '[[]]', '#', '•'];
@@ -14,11 +14,11 @@ export const NoteDetailScreen: React.FC = () => {
     <SafeAreaView style={{ flex: 1, backgroundColor: T.bg }} edges={['top', 'bottom']}>
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 18, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: T.line }}>
-          <TouchableOpacity onPress={() => navigation.goBack()} style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+          <TouchableOpacity onPress={() => router.back()} style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
             <Text style={{ color: T.indigoLt, fontSize: 18 }}>‹</Text>
             <Mono color={T.indigoLt}>Notes</Mono>
           </TouchableOpacity>
-          <TouchableOpacity style={{ backgroundColor: T.indigo, borderRadius: 10, paddingHorizontal: 14, paddingVertical: 7 }} onPress={() => navigation.goBack()}>
+          <TouchableOpacity style={{ backgroundColor: T.indigo, borderRadius: 10, paddingHorizontal: 14, paddingVertical: 7 }} onPress={() => router.back()}>
             <Text style={{ color: '#fff', fontWeight: '600', fontSize: 13, fontFamily: FontFamily.sans }}>Save</Text>
           </TouchableOpacity>
         </View>

@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, TextInput, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation, useRoute } from '@react-navigation/native';
-import { T, FontFamily, Radius } from '../theme';
+import { useRouter, useLocalSearchParams } from 'expo-router';
+import { T, FontFamily } from '../theme';
 import { Mono, Serif, Card } from '../components/primitives';
 import { useGTDStore } from '../store/gtdStore';
 import { TaskBucket } from '../types';
@@ -18,17 +18,17 @@ const BUCKETS: { bucket: TaskBucket; icon: string; label: string; desc: string; 
 ];
 
 export const TaskDetailScreen: React.FC = () => {
-  const navigation = useNavigation<any>();
-  const route = useRoute<any>();
+  const router = useRouter();
+  const { id } = useLocalSearchParams<{ id: string }>();
   const { tasks, updateTask, moveTask, deleteTask } = useGTDStore();
-  const task = tasks.find(t => t.id === route.params?.taskId);
+  const task = tasks.find(t => t.id === id);
   const [nextAction, setNextAction] = useState(task?.nextAction ?? '');
   if (!task) return <SafeAreaView style={{ flex: 1, backgroundColor: T.bg }}><Text style={{ color: T.text, padding: 20 }}>Task not found.</Text></SafeAreaView>;
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: T.bg }} edges={['top', 'bottom']}>
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: T.line }}>
-        <TouchableOpacity onPress={() => navigation.goBack()}><Text style={{ fontSize: 22, color: T.sub }}>‹</Text></TouchableOpacity>
-        <TouchableOpacity onPress={() => Alert.alert('Delete?', '', [{ text: 'Cancel', style: 'cancel' }, { text: 'Delete', style: 'destructive', onPress: () => { deleteTask(task.id); navigation.goBack(); } }])}><Text style={{ fontSize: 18 }}>🗑</Text></TouchableOpacity>
+        <TouchableOpacity onPress={() => router.back()}><Text style={{ fontSize: 22, color: T.sub }}>‹</Text></TouchableOpacity>
+        <TouchableOpacity onPress={() => Alert.alert('Delete?', '', [{ text: 'Cancel', style: 'cancel' }, { text: 'Delete', style: 'destructive', onPress: () => { deleteTask(task.id); router.back(); } }])}><Text style={{ fontSize: 18 }}>🗑</Text></TouchableOpacity>
       </View>
       <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 60 }}>
         {task.aiSuggestion && (
@@ -40,9 +40,9 @@ export const TaskDetailScreen: React.FC = () => {
         <Serif size={22} style={{ marginBottom: 20 }}>{task.title}</Serif>
         <Mono style={{ marginBottom: 10 }}>Next Action</Mono>
         <TextInput style={{ backgroundColor: T.card, borderRadius: 18, borderWidth: 1, borderColor: T.line, padding: 14, color: T.text, fontSize: 14, fontFamily: FontFamily.sans, minHeight: 70, marginBottom: 24 }} value={nextAction} onChangeText={setNextAction} placeholder="What's the very next physical step?" placeholderTextColor={T.faint} multiline />
-        <Mono style={{ marginBottom: 10 }}>② Clarify — Where Does This Belong?</Mono>
+        <Mono style={{ marginBottom: 10 }}>Where Does This Belong?</Mono>
         {BUCKETS.map(opt => (
-          <TouchableOpacity key={opt.bucket} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: task.bucket === opt.bucket ? T.indigoBg : T.card, borderRadius: 18, borderWidth: 1, borderColor: task.bucket === opt.bucket ? T.indigoBd : T.line, padding: 14, marginBottom: 8 }} onPress={() => { updateTask(task.id, { nextAction }); moveTask(task.id, opt.bucket); navigation.goBack(); }}>
+          <TouchableOpacity key={opt.bucket} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: task.bucket === opt.bucket ? T.indigoBg : T.card, borderRadius: 18, borderWidth: 1, borderColor: task.bucket === opt.bucket ? T.indigoBd : T.line, padding: 14, marginBottom: 8 }} onPress={() => { updateTask(task.id, { nextAction }); moveTask(task.id, opt.bucket); router.back(); }}>
             <Text style={{ fontSize: 20 }}>{opt.icon}</Text>
             <View style={{ flex: 1 }}>
               <Text style={{ fontSize: 14, fontWeight: '600', color: opt.color, fontFamily: FontFamily.sans, marginBottom: 2 }}>{opt.label}</Text>

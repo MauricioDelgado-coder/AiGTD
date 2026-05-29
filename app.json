@@ -16,6 +16,9 @@
       "bundleIdentifier": "com.yourname.aigtd",
       "entitlements": {
         "com.apple.developer.ubiquity-kvstore-identifier": "$(TeamIdentifierPrefix)$(CFBundleIdentifier)"
+      },
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
       }
     },
     "plugins": [
@@ -38,6 +41,14 @@
       "typedRoutes": true
     },
     "scheme": "aigtd",
-    "newArchEnabled": true
+    "newArchEnabled": true,
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "035ee2f6-d7a6-4a24-9b61-7a59118b6cf2"
+      }
+    }
   }
 }

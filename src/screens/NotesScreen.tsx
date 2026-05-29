@@ -1,19 +1,18 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, TouchableOpacity, TextInput, ActivityIndicator } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, TouchableOpacity, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
+import { useRouter } from 'expo-router';
 import { T, FontFamily, Radius } from '../theme';
-import { Mono, Serif, Chip, GlassTabBar } from '../components/primitives';
+import { Mono, Serif, Chip } from '../components/primitives';
 
 export const NotesScreen: React.FC = () => {
-  const navigation = useNavigation<any>();
+  const router = useRouter();
   const [query, setQuery] = useState('');
-  const notes: any[] = [];
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: T.bg }} edges={['top']}>
       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingTop: 14, paddingBottom: 8 }}>
         <Serif size={30}>Notes</Serif>
-        <TouchableOpacity style={{ backgroundColor: T.indigo, borderRadius: 999, paddingHorizontal: 14, paddingVertical: 7 }} onPress={() => navigation.navigate('NoteDetail', { noteId: null })}>
+        <TouchableOpacity style={{ backgroundColor: T.indigo, borderRadius: 999, paddingHorizontal: 14, paddingVertical: 7 }} onPress={() => router.push('/notes/new')}>
           <Text style={{ color: '#fff', fontSize: 13, fontWeight: '600', fontFamily: FontFamily.sans }}>+ New</Text>
         </TouchableOpacity>
       </View>
@@ -29,7 +28,6 @@ export const NotesScreen: React.FC = () => {
         <Serif size={20}>No notes yet</Serif>
         <Mono color={T.faint} style={{ marginTop: 8, textAlign: 'center', paddingHorizontal: 40 }}>Tap + New to write your first note. Use [[links]] to connect ideas.</Mono>
       </View>
-      <GlassTabBar active="note" onPress={id => { const map: any = { home: 'Main', inbox: 'Inbox', chat: 'AIChat', review: 'WeeklyReview' }; if (map[id]) navigation.navigate(map[id], {}); }} />
     </SafeAreaView>
   );
 };

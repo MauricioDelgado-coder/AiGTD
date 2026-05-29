@@ -1,6 +1,6 @@
 import { Tabs } from 'expo-router';
 import { Text } from 'react-native';
-import { Colors } from '../../src/theme';
+import { T } from '../../src/theme';
 
 export default function TabsLayout() {
   return (
@@ -8,19 +8,40 @@ export default function TabsLayout() {
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: Colors.surface,
-          borderTopColor: Colors.border,
+          backgroundColor: T.card,
+          borderTopColor: T.line,
           borderTopWidth: 1,
         },
-        tabBarActiveTintColor: Colors.accent,
-        tabBarInactiveTintColor: Colors.textMuted,
+        tabBarActiveTintColor: T.indigo,
+        tabBarInactiveTintColor: T.faint,
       }}
     >
+      <Tabs.Screen
+        name="home"
+        options={{
+          title: 'Home',
+          tabBarIcon: ({ color }) => <Text style={{ color, fontSize: 18 }}>⌂</Text>,
+        }}
+      />
+      <Tabs.Screen
+        name="inbox"
+        options={{
+          title: 'Inbox',
+          tabBarIcon: ({ color }) => <Text style={{ color, fontSize: 18 }}>⊡</Text>,
+        }}
+      />
       <Tabs.Screen
         name="index"
         options={{
           title: 'Notes',
-          tabBarIcon: ({ color }) => <Text style={{ color, fontSize: 18 }}>📝</Text>,
+          tabBarIcon: ({ color }) => <Text style={{ color, fontSize: 18 }}>✎</Text>,
+        }}
+      />
+      <Tabs.Screen
+        name="review"
+        options={{
+          title: 'Review',
+          tabBarIcon: ({ color }) => <Text style={{ color, fontSize: 18 }}>↻</Text>,
         }}
       />
       <Tabs.Screen

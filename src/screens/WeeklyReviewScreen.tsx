@@ -1,21 +1,20 @@
 import React from 'react';
 import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
-import { T, FontFamily, Radius } from '../theme';
-import { Mono, Serif, Card, Checkbox, GlassTabBar } from '../components/primitives';
+import { useRouter } from 'expo-router';
+import { T, FontFamily } from '../theme';
+import { Mono, Serif, Card, Checkbox } from '../components/primitives';
 import { useGTDStore } from '../store/gtdStore';
 
 export const WeeklyReviewScreen: React.FC = () => {
-  const navigation = useNavigation<any>();
+  const router = useRouter();
   const { tasks } = useGTDStore();
   const BARS = [{ d: 'M', v: 0.5 }, { d: 'T', v: 0.8 }, { d: 'W', v: 0.65 }, { d: 'T', v: 1.0 }, { d: 'F', v: 0.45 }, { d: 'S', v: 0.2 }, { d: 'S', v: 0.35 }];
   const STEPS = [{ t: 'Clear the inbox', n: `${tasks.filter(t => t.bucket === 'inbox').length} left`, done: false }, { t: 'Review active projects', n: '5 of 5', done: true }, { t: 'Flag what stalled', n: '2 found', done: false }];
   const stats = [[String(tasks.filter(t => t.done).length), 'Completed', T.green], [String(tasks.filter(t => t.bucket === 'inbox').length), 'Inbox', T.indigoLt], ['6', 'Carried Over', T.amber]];
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: T.bg }} edges={['top']}>
-      <ScrollView contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 14, paddingBottom: 120 }} showsVerticalScrollIndicator={false}>
-        <Mono>Week 22 · May 23–29</Mono>
+      <ScrollView contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 14, paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
         <Serif size={30} style={{ marginTop: 6, marginBottom: 18 }}>Weekly Review</Serif>
         <Card style={{ padding: 17, marginBottom: 14, borderLeftWidth: 3, borderLeftColor: T.indigo }}>
           <Mono color={T.indigoLt} spacing={1.8}>This Week, In Brief</Mono>
@@ -55,11 +54,10 @@ export const WeeklyReviewScreen: React.FC = () => {
             </View>
           ))}
         </Card>
-        <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, padding: 16, borderRadius: 18, backgroundColor: T.indigoBg, borderWidth: 1, borderColor: T.indigoBd }} onPress={() => navigation.navigate('AIChat', { initialMessage: 'Help me plan the rest of my week' })}>
-          <Text style={{ color: T.indigoLt, fontSize: 15, fontWeight: '600', fontFamily: FontFamily.sans }}>Continue in AI Chat →</Text>
+        <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, padding: 16, borderRadius: 18, backgroundColor: T.indigoBg, borderWidth: 1, borderColor: T.indigoBd }} onPress={() => router.push('/(tabs)/inbox')}>
+          <Text style={{ color: T.indigoLt, fontSize: 15, fontWeight: '600', fontFamily: FontFamily.sans }}>Clear Inbox →</Text>
         </TouchableOpacity>
       </ScrollView>
-      <GlassTabBar active="review" onPress={id => { const map: any = { home: 'Main', inbox: 'Inbox', note: 'Notes', chat: 'AIChat' }; if (map[id]) navigation.navigate(map[id], {}); }} />
     </SafeAreaView>
   );
 };
