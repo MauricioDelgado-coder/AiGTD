@@ -31,7 +31,8 @@
     ],
     "web": {
       "bundler": "metro",
-      "output": "static"
+      "output": "single",
+      "favicon": "./assets/favicon.png"
     },
     "experiments": {
       "typedRoutes": true
