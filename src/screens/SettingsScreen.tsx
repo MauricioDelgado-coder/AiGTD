@@ -1,216 +1,71 @@
-// src/screens/SettingsScreen.tsx
 import React, { useState, useEffect } from 'react';
-import {
-  View, Text, TextInput, TouchableOpacity,
-  ScrollView, StyleSheet, Alert,
-} from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ScrollView, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
+import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { getSecureItem, setSecureItem } from '../lib/secureStorage';
-import { Colors, Radius, Spacing, Typography } from '../theme';
-import { iCloudService } from '../services/iCloudService';
+import { T, FontFamily, Radius } from '../theme';
+import { Mono, Serif, Card } from '../components/primitives';
 import { useGTDStore } from '../store/gtdStore';
 
-const ANTHROPIC_KEY = 'aigtd.anthropicKey';
-
 export const SettingsScreen: React.FC = () => {
-  const router = useRouter();
-  const { tasks, projects, lastSynced, setLastSynced } = useGTDStore();
-
+  const navigation = useNavigation<any>();
+  const { tasks, projects } = useGTDStore();
   const [anthropicKey, setAnthropicKey] = useState('');
   const [voyageKey, setVoyageKey] = useState('');
   const [supabaseUrl, setSupabaseUrl] = useState('');
   const [supabaseKey, setSupabaseKey] = useState('');
-  const [saved, setSaved] = useState(false);
-  const [syncing, setSyncing] = useState(false);
 
   useEffect(() => {
-    (async () => {
-      setAnthropicKey((await getSecureItem(ANTHROPIC_KEY)) ?? '');
-      setVoyageKey((await AsyncStorage.getItem('aigtd.voyageKey')) ?? '');
-      setSupabaseUrl((await AsyncStorage.getItem('aigtd.supabaseUrl')) ?? '');
-      setSupabaseKey((await AsyncStorage.getItem('aigtd.supabaseKey')) ?? '');
-    })();
+    AsyncStorage.multiGet(['aigtd.anthropicKey', 'aigtd.voyageKey', 'aigtd.supabaseUrl', 'aigtd.supabaseKey']).then(r => {
+      setAnthropicKey(r[0][1] ?? ''); setVoyageKey(r[1][1] ?? ''); setSupabaseUrl(r[2][1] ?? ''); setSupabaseKey(r[3][1] ?? '');
+    });
   }, []);
 
   const saveAll = async () => {
-    await setSecureItem(ANTHROPIC_KEY, anthropicKey.trim());
-    await AsyncStorage.multiSet([
-      ['aigtd.voyageKey', voyageKey.trim()],
-      ['aigtd.supabaseUrl', supabaseUrl.trim()],
-      ['aigtd.supabaseKey', supabaseKey.trim()],
-    ]);
-    setSaved(true);
-    Alert.alert('Saved', 'All keys saved. The app is fully configured.');
+    await AsyncStorage.multiSet([['aigtd.anthropicKey', anthropicKey.trim()], ['aigtd.voyageKey', voyageKey.trim()], ['aigtd.supabaseUrl', supabaseUrl.trim()], ['aigtd.supabaseKey', supabaseKey.trim()]]);
+    Alert.alert('Saved', 'All keys saved.');
   };
 
-  const forceSync = async () => {
-    setSyncing(true);
-    await iCloudService.sync(tasks, projects);
-    const ts = new Date().toISOString();
-    setLastSynced(ts);
-    setSyncing(false);
-    Alert.alert('Synced', 'Data pushed to iCloud.');
-  };
-
-  const KeyField = ({
-    label, value, onChange, placeholder, help,
-  }: { label: string; value: string; onChange: (v: string) => void; placeholder: string; help?: string }) => (
-    <View style={styles.fieldWrap}>
-      <Text style={styles.fieldLabel}>{label}</Text>
-      {help && <Text style={styles.fieldHelp}>{help}</Text>}
-      <TextInput
-        style={styles.input}
-        value={value}
-        onChangeText={onChange}
-        placeholder={placeholder}
-        placeholderTextColor={Colors.textMuted}
-        secureTextEntry={!value.startsWith('https')}
-        autoCapitalize="none"
-        autoCorrect={false}
-      />
+  const Field = ({ label, value, onChange, placeholder, help }: any) => (
+    <View style={{ marginBottom: 12 }}>
+      <Text style={{ color: T.text, fontSize: 13, fontWeight: '600', fontFamily: FontFamily.sans, marginBottom: 3 }}>{label}</Text>
+      {help && <Text style={{ color: T.faint, fontSize: 11, fontFamily: FontFamily.mono, marginBottom: 4 }}>{help}</Text>}
+      <TextInput style={{ backgroundColor: T.cardSoft, borderRadius: 12, borderWidth: 1, borderColor: T.line, padding: 11, color: T.text, fontSize: 13, fontFamily: FontFamily.mono }} value={value} onChangeText={onChange} placeholder={placeholder} placeholderTextColor={T.faint} secureTextEntry={!value.startsWith('https')} autoCapitalize="none" autoCorrect={false} />
     </View>
   );
 
   return (
-    <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()}>
-          <Text style={styles.back}>← Back</Text>
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Settings</Text>
-        <View style={{ width: 60 }} />
+    <SafeAreaView style={{ flex: 1, backgroundColor: T.bg }} edges={['top', 'bottom']}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: T.line }}>
+        <TouchableOpacity onPress={() => navigation.goBack()}><Text style={{ fontSize: 22, color: T.sub }}>‹</Text></TouchableOpacity>
+        <Serif size={18}>Settings</Serif>
+        <View style={{ width: 22 }} />
       </View>
-
-      <ScrollView contentContainerStyle={styles.content}>
-
-        {/* AI */}
-        <Text style={styles.sectionLabel}>AI — REQUIRED</Text>
-        <View style={styles.card}>
-          <KeyField
-            label="Anthropic API Key"
-            value={anthropicKey}
-            onChange={setAnthropicKey}
-            placeholder="sk-ant-…"
-            help="console.anthropic.com → Get API Keys"
-          />
-        </View>
-
-        {/* Second Brain */}
-        <Text style={styles.sectionLabel}>SECOND BRAIN — NOTES & SEARCH</Text>
-        <View style={styles.card}>
-          <Text style={styles.cardDesc}>
-            Notes are stored in Supabase (free tier). Semantic search uses Voyage AI embeddings (200M free tokens — enough for years of personal use).
-          </Text>
-          <KeyField
-            label="Supabase Project URL"
-            value={supabaseUrl}
-            onChange={setSupabaseUrl}
-            placeholder="https://xxxx.supabase.co"
-            help="supabase.com → your project → Settings → API"
-          />
-          <KeyField
-            label="Supabase Anon Key"
-            value={supabaseKey}
-            onChange={setSupabaseKey}
-            placeholder="eyJ…"
-          />
-          <KeyField
-            label="Voyage AI API Key"
-            value={voyageKey}
-            onChange={setVoyageKey}
-            placeholder="pa-…"
-            help="dash.voyageai.com → free tier, no card needed"
-          />
-        </View>
-
-        {/* Save */}
-        <TouchableOpacity style={styles.saveBtn} onPress={saveAll}>
-          <Text style={styles.saveBtnText}>{saved ? '✓ All Keys Saved' : 'Save All Keys'}</Text>
+      <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 60 }}>
+        <Mono style={{ marginBottom: 8 }}>AI — Required</Mono>
+        <Card style={{ padding: 16, marginBottom: 20 }}>
+          <Field label="Anthropic API Key" value={anthropicKey} onChange={setAnthropicKey} placeholder="sk-ant-…" help="console.anthropic.com → API Keys" />
+        </Card>
+        <Mono style={{ marginBottom: 8 }}>Second Brain — Notes & Search</Mono>
+        <Card style={{ padding: 16, marginBottom: 20 }}>
+          <Field label="Supabase URL" value={supabaseUrl} onChange={setSupabaseUrl} placeholder="https://xxxx.supabase.co" help="supabase.com → Settings → API" />
+          <Field label="Supabase Anon Key" value={supabaseKey} onChange={setSupabaseKey} placeholder="eyJ…" />
+          <Field label="Voyage AI Key" value={voyageKey} onChange={setVoyageKey} placeholder="pa-…" help="dash.voyageai.com — 200M free tokens" />
+        </Card>
+        <TouchableOpacity style={{ backgroundColor: T.indigo, borderRadius: 18, padding: 14, alignItems: 'center', marginBottom: 20 }} onPress={saveAll}>
+          <Text style={{ color: '#fff', fontWeight: '600', fontSize: 15, fontFamily: FontFamily.sans }}>Save All Keys</Text>
         </TouchableOpacity>
-
-        {/* iCloud */}
-        <Text style={styles.sectionLabel}>iCLOUD SYNC</Text>
-        <View style={styles.card}>
-          <Text style={styles.cardDesc}>
-            Tasks sync automatically via iCloud Key-Value Storage ({iCloudService.available ? '✓ Connected' : '○ Simulator/fallback — will sync on device'}).
-          </Text>
-          {lastSynced && (
-            <Text style={styles.syncTime}>Last synced: {new Date(lastSynced).toLocaleString()}</Text>
-          )}
-          <TouchableOpacity style={styles.secondaryBtn} onPress={forceSync}>
-            <Text style={styles.secondaryBtnText}>{syncing ? 'Syncing…' : '☁ Force Sync'}</Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Stats */}
-        <Text style={styles.sectionLabel}>DATA</Text>
-        <View style={styles.card}>
-          {[
-            { label: 'Tasks', value: tasks.length },
-            { label: 'Completed', value: tasks.filter((t) => t.done).length },
-            { label: 'Projects', value: projects.length },
-          ].map((s) => (
-            <View key={s.label} style={styles.statRow}>
-              <Text style={styles.statLabel}>{s.label}</Text>
-              <Text style={styles.statValue}>{s.value}</Text>
+        <Mono style={{ marginBottom: 8 }}>Data</Mono>
+        <Card style={{ padding: 16 }}>
+          {[['Tasks', tasks.length], ['Completed', tasks.filter(t => t.done).length], ['Projects', projects.length]].map(([l, v]) => (
+            <View key={l as string} style={{ flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 5, borderBottomWidth: 1, borderBottomColor: T.line }}>
+              <Text style={{ color: T.sub, fontSize: 13, fontFamily: FontFamily.sans }}>{l as string}</Text>
+              <Text style={{ color: T.text, fontFamily: FontFamily.mono, fontWeight: '600' }}>{String(v)}</Text>
             </View>
           ))}
-        </View>
-
-        <Text style={[styles.cardDesc, { textAlign: 'center', marginTop: 12 }]}>
-          aiGTD v1.0.0 · Built with Claude AI
-        </Text>
+        </Card>
+        <Text style={{ color: T.faint, fontSize: 12, fontFamily: FontFamily.mono, textAlign: 'center', marginTop: 20 }}>aiGTD v1.0.0 · Built with Claude AI</Text>
       </ScrollView>
     </SafeAreaView>
   );
 };
-
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: Colors.bg },
-  header: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingHorizontal: Spacing.md, paddingVertical: 12,
-    borderBottomWidth: 1, borderBottomColor: Colors.border,
-  },
-  back: { color: Colors.accent, fontSize: 15, fontFamily: Typography.bodyFont },
-  headerTitle: { color: Colors.text, fontFamily: Typography.displayFont, fontSize: 18, fontStyle: 'italic' },
-  content: { padding: Spacing.md, paddingBottom: 60 },
-  sectionLabel: {
-    color: Colors.textMuted, fontSize: 10, fontFamily: Typography.monoFont,
-    letterSpacing: 1.5, marginBottom: 8, marginTop: 20,
-  },
-  card: {
-    backgroundColor: Colors.surface, borderRadius: Radius.lg,
-    borderWidth: 1, borderColor: Colors.border, padding: 16, gap: 12,
-  },
-  cardDesc: { color: Colors.textSub, fontSize: 13, fontFamily: Typography.bodyFont, lineHeight: 19 },
-  fieldWrap: { gap: 4 },
-  fieldLabel: { color: Colors.text, fontSize: 13, fontWeight: '600', fontFamily: Typography.bodyFont },
-  fieldHelp: { color: Colors.textMuted, fontSize: 11, fontFamily: Typography.monoFont },
-  input: {
-    backgroundColor: Colors.surface2, borderRadius: Radius.md,
-    borderWidth: 1, borderColor: Colors.border,
-    padding: 11, color: Colors.text, fontSize: 13, fontFamily: Typography.monoFont,
-  },
-  saveBtn: {
-    backgroundColor: Colors.accent, borderRadius: Radius.md,
-    padding: 14, alignItems: 'center', marginTop: 12,
-    shadowColor: Colors.accent, shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.4, shadowRadius: 8,
-  },
-  saveBtnText: { color: Colors.white, fontWeight: '600', fontSize: 15, fontFamily: Typography.bodyFont },
-  secondaryBtn: {
-    backgroundColor: Colors.surface2, borderRadius: Radius.md,
-    borderWidth: 1, borderColor: Colors.border, padding: 12, alignItems: 'center',
-  },
-  secondaryBtnText: { color: Colors.textSub, fontFamily: Typography.bodyFont },
-  syncTime: { color: Colors.mint, fontSize: 12, fontFamily: Typography.monoFont },
-  statRow: {
-    flexDirection: 'row', justifyContent: 'space-between',
-    paddingVertical: 5, borderBottomWidth: 1, borderBottomColor: Colors.border,
-  },
-  statLabel: { color: Colors.textSub, fontSize: 13, fontFamily: Typography.bodyFont },
-  statValue: { color: Colors.text, fontFamily: Typography.monoFont, fontWeight: '600' },
-});
