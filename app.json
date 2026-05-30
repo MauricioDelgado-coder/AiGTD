@@ -5,11 +5,11 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "dark",
+    "userInterfaceStyle": "light",
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#0A0A0D"
+      "backgroundColor": "#2A6FDB"
     },
     "ios": {
       "supportsTablet": true,
@@ -48,6 +48,12 @@
       },
       "eas": {
         "projectId": "035ee2f6-d7a6-4a24-9b61-7a59118b6cf2"
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#2A6FDB"
       }
     }
   }
