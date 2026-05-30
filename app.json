@@ -13,7 +13,7 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.lennar.aigtd",
+      "bundleIdentifier": "com.Lennar.aigtd",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
