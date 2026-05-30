@@ -14,3 +14,14 @@ web-build/
 
 # macOS
 .DS_Store
+
+# Dependencies
+node_modules/
+
+# Expo
+.expo/
+dist/
+web-build/
+
+# macOS
+.DS_Store
