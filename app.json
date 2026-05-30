@@ -14,9 +14,6 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.lenner.aigtd",
-      "entitlements": {
-        "com.apple.developer.ubiquity-kvstore-identifier": "$(TeamIdentifierPrefix)$(CFBundleIdentifier)"
-      },
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
@@ -32,7 +29,8 @@
             "deploymentTarget": "15.1"
           }
         }
-      ]
+      ],
+      "expo-asset"
     ],
     "web": {
       "bundler": "metro",
