@@ -4,3 +4,13 @@
 
 expo-env.d.ts
 # @end expo-cli
+# Dependencies
+node_modules/
+
+# Expo
+.expo/
+dist/
+web-build/
+
+# macOS
+.DS_Store
