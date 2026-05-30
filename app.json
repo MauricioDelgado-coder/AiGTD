@@ -13,7 +13,7 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.yourname.aigtd",
+      "bundleIdentifier": "com.lennar.aigtd",
       "entitlements": {
         "com.apple.developer.ubiquity-kvstore-identifier": "$(TeamIdentifierPrefix)$(CFBundleIdentifier)"
       },
@@ -23,6 +23,8 @@
     },
     "plugins": [
       "expo-router",
+      "expo-document-picker",
+      "expo-file-system",
       [
         "expo-build-properties",
         {

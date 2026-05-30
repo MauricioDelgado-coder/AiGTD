@@ -27,9 +27,9 @@
   "submit": {
     "production": {
       "ios": {
-        "appleId": "your@apple.id",
-        "ascAppId": "YOUR_APP_STORE_CONNECT_APP_ID",
-        "appleTeamId": "YOUR_TEAM_ID"
+        "appleId": "mauricio.delgado@lennar.com",
+        "ascAppId": "6774756672",
+        "appleTeamId": "463UKB5TDR"
       }
     }
   }
