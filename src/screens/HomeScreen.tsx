@@ -1,42 +1,78 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, RefreshControl, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { T, FontFamily } from '../theme';
 import { Mono, Serif, Card, Checkbox, Icon } from '../components/primitives';
 import { useGTDStore } from '../store/gtdStore';
+import { aiService } from '../services/aiService';
+
+function getGreeting(): string {
+  const hour = new Date().getHours();
+  if (hour < 12) return 'Good morning.';
+  if (hour < 17) return 'Good afternoon.';
+  return 'Good evening.';
+}
 
 export const HomeScreen: React.FC = () => {
   const router = useRouter();
   const { tasks, toggleDone } = useGTDStore();
   const [refreshing, setRefreshing] = useState(false);
+  const [digest, setDigest] = useState<string | null>(null);
+  const [digestLoading, setDigestLoading] = useState(false);
+
   const inboxCount = tasks.filter(t => t.bucket === 'inbox').length;
   const upNext = tasks.filter(t => t.bucket === 'current' && !t.done).slice(0, 3);
   const doneCount = tasks.filter(t => t.done).length;
   const urgentCount = tasks.filter(t => t.priority === 'urgent' && !t.done).length;
+
   const stats = [
     { n: `${doneCount}`, l: 'Done', c: T.green },
     { n: String(inboxCount), l: 'Inbox', c: T.indigo },
     { n: String(urgentCount), l: 'Urgent', c: T.amber },
   ];
+
   const today = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+
+  const loadDigest = async () => {
+    if (tasks.length === 0) return;
+    setDigestLoading(true);
+    try {
+      const result = await aiService.dailyDigest(tasks);
+      setDigest(result);
+    } catch {
+      // No API key — leave null to show CTA
+    } finally {
+      setDigestLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadDigest();
+  }, []);
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await loadDigest();
+    setRefreshing(false);
+  };
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: T.bg }} edges={['top']}>
       <ScrollView
         contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 14, paddingBottom: 120 }}
         showsVerticalScrollIndicator={false}
-        refreshControl={<RefreshControl refreshing={refreshing} tintColor={T.indigo} onRefresh={() => {}} />}
+        refreshControl={<RefreshControl refreshing={refreshing} tintColor={T.indigo} onRefresh={onRefresh} />}
       >
         <Mono>{today}</Mono>
-        <Serif size={32} style={{ marginTop: 6, marginBottom: 20 }}>Good morning.</Serif>
+        <Serif size={32} style={{ marginTop: 6, marginBottom: 20 }}>{getGreeting()}</Serif>
 
         {/* AI Digest card */}
         <View style={{
           backgroundColor: T.card,
           borderRadius: 18,
           borderWidth: 1,
-          borderColor: T.line,
+          borderColor: digest ? T.indigoBd : T.line,
           padding: 18,
           marginBottom: 14,
           overflow: 'hidden',
@@ -55,11 +91,19 @@ export const HomeScreen: React.FC = () => {
             <Icon name="sparkle" size={15} color={T.indigo} />
             <Mono color={T.indigo} spacing={1.8}>AI Daily Digest</Mono>
           </View>
-          <Text style={{ fontSize: 15, lineHeight: 23, color: T.text, fontFamily: FontFamily.sans }}>
-            Your AI digest will appear here once you add your Anthropic API key in{' '}
-            <Text style={{ color: T.indigo, fontWeight: '600' }}>Settings</Text>.
-            Add tasks to your inbox to get started.
-          </Text>
+
+          {digestLoading ? (
+            <Text style={{ fontSize: 14, color: T.faint, fontFamily: FontFamily.sans }}>Generating your digest…</Text>
+          ) : digest ? (
+            <Text style={{ fontSize: 15, lineHeight: 23, color: T.text, fontFamily: FontFamily.sans }}>{digest}</Text>
+          ) : (
+            <Text style={{ fontSize: 15, lineHeight: 23, color: T.text, fontFamily: FontFamily.sans }}>
+              Your AI digest will appear here once you add your Anthropic API key in{' '}
+              <Text style={{ color: T.indigo, fontWeight: '600' }}>Settings</Text>.
+              Add tasks to your inbox to get started.
+            </Text>
+          )}
+
           <View style={{ flexDirection: 'row', gap: 8, marginTop: 14 }}>
             <TouchableOpacity
               style={{ flex: 1, alignItems: 'center', paddingVertical: 9, borderRadius: 11, backgroundColor: T.indigo }}

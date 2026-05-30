@@ -5,22 +5,52 @@ import { useRouter } from 'expo-router';
 import { T, FontFamily } from '../theme';
 import { Mono, Serif, Checkbox, Chip, Card } from '../components/primitives';
 import { useGTDStore } from '../store/gtdStore';
+import { aiService } from '../services/aiService';
 
 export const InboxScreen: React.FC = () => {
   const router = useRouter();
-  const { tasks, addTask, toggleDone } = useGTDStore();
+  const { tasks, addTask, updateTask, toggleDone } = useGTDStore();
   const [captureText, setCaptureText] = useState('');
   const [processing, setProcessing] = useState(false);
   const [filter, setFilter] = useState('All');
+
   const inboxTasks = tasks.filter(t => t.bucket === 'inbox');
+
+  const filteredTasks = inboxTasks.filter(t => {
+    if (filter === 'All') return true;
+    if (filter === 'Flagged') return t.priority === 'urgent';
+    if (filter === 'Unsorted') return t.tags.length === 0;
+    if (filter === 'Today') {
+      if (!t.scheduledDate) return false;
+      const today = new Date().toDateString();
+      return new Date(t.scheduledDate).toDateString() === today;
+    }
+    return true;
+  });
 
   const handleCapture = async () => {
     const text = captureText.trim();
     if (!text || processing) return;
     setCaptureText('');
     setProcessing(true);
-    addTask({ title: text, bucket: 'inbox', priority: 'normal', tags: [], done: false });
-    setProcessing(false);
+
+    // Add task immediately so UI feels fast
+    const task = addTask({ title: text, bucket: 'inbox', priority: 'normal', tags: [], done: false });
+
+    // Then try AI clarification in the background
+    try {
+      const result = await aiService.clarify(text);
+      updateTask(task.id, {
+        aiSuggestion: result.summary,
+        nextAction: result.nextAction,
+        tags: result.suggestedTags,
+        priority: result.isQuick ? 'normal' : (result.needsAction ? 'normal' : 'low'),
+      });
+    } catch {
+      // No API key or network error — task already added, just skip AI
+    } finally {
+      setProcessing(false);
+    }
   };
 
   return (
@@ -31,7 +61,7 @@ export const InboxScreen: React.FC = () => {
         <Mono>{inboxTasks.length} items</Mono>
       </View>
 
-      {/* Capture bar — focused indigo glow */}
+      {/* Capture bar */}
       <View style={{ paddingHorizontal: 20, marginBottom: 14 }}>
         <View style={{
           flexDirection: 'row',
@@ -43,7 +73,7 @@ export const InboxScreen: React.FC = () => {
           backgroundColor: T.card,
           borderWidth: 1,
           borderColor: T.indigoBd,
-          // @ts-ignore web shadow
+          // @ts-ignore
           boxShadow: '0 0 0 4px rgba(123,110,246,0.07)',
         }}>
           <Text style={{ fontSize: 16, color: T.indigoLt, fontWeight: '600' }}>+</Text>
@@ -63,10 +93,15 @@ export const InboxScreen: React.FC = () => {
           >
             {processing
               ? <ActivityIndicator color="#fff" size="small" />
-              : <Text style={{ color: '#fff', fontSize: 20, fontWeight: '300' }}>♪</Text>
+              : <Text style={{ color: '#fff', fontSize: 16, fontWeight: '600' }}>✦</Text>
             }
           </TouchableOpacity>
         </View>
+        {processing && (
+          <Mono color={T.indigo} size={10} spacing={1} style={{ marginTop: 6, marginLeft: 4 }}>
+            AI is analyzing your task…
+          </Mono>
+        )}
       </View>
 
       {/* Filter chips */}
@@ -77,17 +112,19 @@ export const InboxScreen: React.FC = () => {
       </View>
 
       <FlatList
-        data={inboxTasks}
+        data={filteredTasks}
         keyExtractor={t => t.id}
         contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 120 }}
         ListEmptyComponent={
           <View style={{ padding: 40, alignItems: 'center' }}>
             <Text style={{ fontSize: 28, marginBottom: 12 }}>📭</Text>
-            <Serif size={18} color={T.sub}>Inbox zero</Serif>
-            <Mono color={T.faint} style={{ marginTop: 8, textAlign: 'center' }}>Well done — nothing left to capture</Mono>
+            <Serif size={18} color={T.sub}>{filter === 'All' ? 'Inbox zero' : `No ${filter.toLowerCase()} items`}</Serif>
+            <Mono color={T.faint} style={{ marginTop: 8, textAlign: 'center' }}>
+              {filter === 'All' ? 'Well done — nothing left to capture' : 'Try a different filter'}
+            </Mono>
           </View>
         }
-        renderItem={({ item, index }) => (
+        renderItem={({ item }) => (
           <TouchableOpacity
             style={{
               flexDirection: 'row',
@@ -97,7 +134,7 @@ export const InboxScreen: React.FC = () => {
               backgroundColor: T.card,
               borderRadius: 18,
               borderWidth: 1,
-              borderColor: T.line,
+              borderColor: item.aiSuggestion ? T.indigoBd : T.line,
               marginBottom: 8,
             }}
             onPress={() => router.push(`/task/${item.id}`)}
@@ -113,16 +150,16 @@ export const InboxScreen: React.FC = () => {
               }} numberOfLines={2}>
                 {item.title}
               </Text>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 5 }}>
-                <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: item.priority === 'urgent' ? T.rose : T.indigo }} />
-                <Mono size={9.5} spacing={1}>{item.tags[0] || 'Inbox'}</Mono>
-                {item.nextAction ? (
-                  <>
-                    <Text style={{ color: T.dim }}>·</Text>
-                    <Mono size={9.5} spacing={1} color={T.faint}>{item.nextAction.slice(0, 24)}</Mono>
-                  </>
-                ) : null}
-              </View>
+              {item.aiSuggestion ? (
+                <Mono size={9.5} spacing={1} color={T.indigo} style={{ marginTop: 5 }} numberOfLines={1}>
+                  ✦ {item.aiSuggestion}
+                </Mono>
+              ) : (
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 5 }}>
+                  <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: item.priority === 'urgent' ? T.rose : T.indigo }} />
+                  <Mono size={9.5} spacing={1}>{item.tags[0] || 'Inbox'}</Mono>
+                </View>
+              )}
             </View>
             {item.priority === 'urgent' && (
               <Text style={{ color: T.rose, fontSize: 14 }}>⚑</Text>

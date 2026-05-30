@@ -5,10 +5,11 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { T } from '../../src/theme';
 
 const TAB_ICONS: Record<string, string> = {
-  home:     '⌂',
-  inbox:    '⊡',
-  index:    '✎',
-  review:   '↻',
+  home: '⌂',
+  inbox: '⊡',
+  index: '✎',
+  review: '↻',
+  chat: '✦',
   settings: '⚙',
 };
 
@@ -78,10 +79,11 @@ export default function TabsLayout() {
       tabBar={(props) => <CustomTabBar {...props} />}
       screenOptions={{ headerShown: false }}
     >
-      <Tabs.Screen name="home"     options={{ title: 'Home' }} />
-      <Tabs.Screen name="inbox"    options={{ title: 'Inbox' }} />
-      <Tabs.Screen name="index"    options={{ title: 'Notes' }} />
-      <Tabs.Screen name="review"   options={{ title: 'Review' }} />
+      <Tabs.Screen name="home" options={{ title: 'Home' }} />
+      <Tabs.Screen name="inbox" options={{ title: 'Inbox' }} />
+      <Tabs.Screen name="index" options={{ title: 'Notes' }} />
+      <Tabs.Screen name="review" options={{ title: 'Review' }} />
+      <Tabs.Screen name="chat" options={{ title: 'Chat' }} />
       <Tabs.Screen name="settings" options={{ title: 'Settings' }} />
     </Tabs>
   );
