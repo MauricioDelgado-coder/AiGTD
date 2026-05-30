@@ -43,7 +43,7 @@
       "typedRoutes": true
     },
     "scheme": "aigtd",
-    "newArchEnabled": true,
+    "newArchEnabled": false,
     "extra": {
       "router": {
         "origin": false
