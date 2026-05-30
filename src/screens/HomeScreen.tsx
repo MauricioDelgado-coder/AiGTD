@@ -5,6 +5,7 @@ import { useRouter } from 'expo-router';
 import { T, FontFamily } from '../theme';
 import { Mono, Serif, Card, Checkbox, Icon } from '../components/primitives';
 import { useGTDStore } from '../store/gtdStore';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { aiService } from '../services/aiService';
 
 function getGreeting(): string {
@@ -19,6 +20,7 @@ export const HomeScreen: React.FC = () => {
   const { tasks, toggleDone } = useGTDStore();
   const [refreshing, setRefreshing] = useState(false);
   const [digest, setDigest] = useState<string | null>(null);
+  const [userName, setUserName] = useState('');
   const [digestLoading, setDigestLoading] = useState(false);
 
   const inboxCount = tasks.filter(t => t.bucket === 'inbox').length;
@@ -33,6 +35,10 @@ export const HomeScreen: React.FC = () => {
   ];
 
   const today = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+
+  useEffect(() => {
+    AsyncStorage.getItem('aigtd.username').then(n => { if (n) setUserName(n); });
+  }, []);
 
   const loadDigest = async () => {
     if (tasks.length === 0) return;
@@ -65,7 +71,7 @@ export const HomeScreen: React.FC = () => {
         refreshControl={<RefreshControl refreshing={refreshing} tintColor={T.indigo} onRefresh={onRefresh} />}
       >
         <Mono>{today}</Mono>
-        <Serif size={32} style={{ marginTop: 6, marginBottom: 20 }}>{getGreeting()}</Serif>
+        <Serif size={32} style={{ marginTop: 6, marginBottom: 20 }}>{getGreeting()}{userName ? ' ' + userName.split(' ')[0] + '.' : ''}</Serif>
 
         {/* AI Digest card */}
         <View style={{

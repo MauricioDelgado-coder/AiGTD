@@ -4,18 +4,18 @@ import {
   ScrollView, StyleSheet, Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getSecureItem, setSecureItem } from '../lib/secureStorage';
 import { Colors, Radius, Spacing, Typography, T, FontFamily } from '../theme';
 import { useGTDStore } from '../store/gtdStore';
 
 const ANTHROPIC_KEY = 'aigtd.anthropicKey';
+const USERNAME_KEY = 'aigtd.username';
 
 export const SettingsScreen: React.FC = () => {
-  const router = useRouter();
   const { tasks, projects } = useGTDStore();
 
+  const [username, setUsername] = useState('');
   const [anthropicKey, setAnthropicKey] = useState('');
   const [voyageKey, setVoyageKey] = useState('');
   const [supabaseUrl, setSupabaseUrl] = useState('');
@@ -24,6 +24,7 @@ export const SettingsScreen: React.FC = () => {
 
   useEffect(() => {
     (async () => {
+      setUsername((await AsyncStorage.getItem(USERNAME_KEY)) ?? '');
       setAnthropicKey((await getSecureItem(ANTHROPIC_KEY)) ?? '');
       setVoyageKey((await AsyncStorage.getItem('aigtd.voyageKey')) ?? '');
       setSupabaseUrl((await AsyncStorage.getItem('aigtd.supabaseUrl')) ?? '');
@@ -32,6 +33,7 @@ export const SettingsScreen: React.FC = () => {
   }, []);
 
   const saveAll = async () => {
+    await AsyncStorage.setItem(USERNAME_KEY, username.trim());
     await setSecureItem(ANTHROPIC_KEY, anthropicKey.trim());
     await AsyncStorage.multiSet([
       ['aigtd.voyageKey', voyageKey.trim()],
@@ -39,12 +41,12 @@ export const SettingsScreen: React.FC = () => {
       ['aigtd.supabaseKey', supabaseKey.trim()],
     ]);
     setSaved(true);
-    Alert.alert('Saved', 'All keys saved. The app is fully configured.');
+    Alert.alert('Saved', 'Your settings have been saved.');
   };
 
   const KeyField = ({
-    label, value, onChange, placeholder, help,
-  }: { label: string; value: string; onChange: (v: string) => void; placeholder: string; help?: string }) => (
+    label, value, onChange, placeholder, help, secure = true,
+  }: { label: string; value: string; onChange: (v: string) => void; placeholder: string; help?: string; secure?: boolean }) => (
     <View style={styles.fieldWrap}>
       <Text style={styles.fieldLabel}>{label}</Text>
       {help && <Text style={styles.fieldHelp}>{help}</Text>}
@@ -54,7 +56,7 @@ export const SettingsScreen: React.FC = () => {
         onChangeText={onChange}
         placeholder={placeholder}
         placeholderTextColor={T.faint}
-        secureTextEntry={!value.startsWith('https')}
+        secureTextEntry={secure && !value.startsWith('https')}
         autoCapitalize="none"
         autoCorrect={false}
       />
@@ -67,6 +69,36 @@ export const SettingsScreen: React.FC = () => {
 
         <Text style={styles.pageTitle}>Settings</Text>
 
+        {/* Profile */}
+        <Text style={styles.sectionLabel}>PROFILE</Text>
+        <View style={styles.card}>
+          <KeyField
+            label="Your Name"
+            value={username}
+            onChange={setUsername}
+            placeholder="e.g. Mauricio"
+            secure={false}
+          />
+          <Text style={styles.cardDesc}>
+            Used to personalize your AI digest and chat greetings.
+          </Text>
+        </View>
+
+        {/* Onboarding */}
+        <Text style={styles.sectionLabel}>GETTING STARTED</Text>
+        <View style={styles.card}>
+          <Text style={styles.cardDesc}>
+            New to GTD or aiGTD? Walk through the onboarding guide to get the most out of the app.
+          </Text>
+          <TouchableOpacity
+            style={styles.linkBtn}
+            onPress={() => Alert.alert('Onboarding', 'Onboarding presentation link coming soon.')}
+          >
+            <Text style={styles.linkBtnText}>📋  View Onboarding Guide →</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* AI */}
         <Text style={styles.sectionLabel}>AI — REQUIRED</Text>
         <View style={styles.card}>
           <KeyField
@@ -78,6 +110,7 @@ export const SettingsScreen: React.FC = () => {
           />
         </View>
 
+        {/* Second Brain */}
         <Text style={styles.sectionLabel}>SECOND BRAIN — NOTES & SEARCH</Text>
         <View style={styles.card}>
           <Text style={styles.cardDesc}>
@@ -106,9 +139,10 @@ export const SettingsScreen: React.FC = () => {
         </View>
 
         <TouchableOpacity style={styles.saveBtn} onPress={saveAll}>
-          <Text style={styles.saveBtnText}>{saved ? '✓ All Keys Saved' : 'Save All Keys'}</Text>
+          <Text style={styles.saveBtnText}>{saved ? '✓ All Settings Saved' : 'Save All Settings'}</Text>
         </TouchableOpacity>
 
+        {/* Data */}
         <Text style={styles.sectionLabel}>DATA</Text>
         <View style={styles.card}>
           {[
@@ -157,6 +191,11 @@ const styles = StyleSheet.create({
     padding: 14, alignItems: 'center', marginTop: 12,
   },
   saveBtnText: { color: '#fff', fontWeight: '600', fontSize: 15, fontFamily: FontFamily.sans },
+  linkBtn: {
+    borderRadius: Radius.md, borderWidth: 1, borderColor: T.indigoBd,
+    backgroundColor: T.indigoBg, padding: 12, alignItems: 'center',
+  },
+  linkBtnText: { color: T.indigo, fontWeight: '600', fontSize: 14, fontFamily: FontFamily.sans },
   statRow: {
     flexDirection: 'row', justifyContent: 'space-between',
     paddingVertical: 5, borderBottomWidth: 1, borderBottomColor: T.line,
